@@ -36,15 +36,15 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if(error) throw error;
-    if(fontsLoaded) SplashScreen.hideAsync();
+    if (error) throw error;
+    if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded, error]);
 
-//   useEffect(() => {
-//     fetchAuthenticatedUser()
-//   }, []);
+  //   useEffect(() => {
+  //     fetchAuthenticatedUser()
+  //   }, []);
 
-//   if(!fontsLoaded || isLoading) return null;
+  if (!fontsLoaded) return null;
 
   return <Stack screenOptions={{ headerShown: false }} />;
 };
