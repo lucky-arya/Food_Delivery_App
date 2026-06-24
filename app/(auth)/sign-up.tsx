@@ -1,21 +1,38 @@
 import CustomButton from '@/components/CustomButton';
 import CustomInput from '@/components/CustomInput';
-import { Link, router } from 'expo-router';
+import { creatUser, getCurrentUser } from '@/lib/supabase';
+import { Link, Redirect, router } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 
+import { useAuthStore } from '@/store/auth.store';
+
 const SignUp = () => {
+  const { loading, isLogged, setUser, setIsLogged } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '' })
 
+  if (!loading && isLogged) return <Redirect href="/" />;
+
 
   const submitSignInForm = async () => {
-    if (!form.name || !form.email || !form.password) return Alert.alert('Error', 'Please enter valid email and password');
+    const { name, email, password } = form;
+    if (!name || !email || !password) return Alert.alert('Error', 'Please enter valid email and password');
 
     setIsSubmitting(true);
     try {
+
       //call appwrite Sign Up Function
-      Alert.alert('Success', 'Sign Up Successfully');
+      await creatUser({
+        name,
+        email,
+        password
+      })
+
+      const user = await getCurrentUser();
+      setUser(user);
+      setIsLogged(true);
+
       router.replace('/');
     } catch (error: any) {
       Alert.alert('Error', error.message)

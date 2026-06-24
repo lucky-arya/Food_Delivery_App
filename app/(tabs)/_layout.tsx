@@ -1,11 +1,20 @@
+import { useAuthStore } from '@/store/auth.store';
 import { Redirect, Slot } from 'expo-router';
 import React from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
 const _layout = () => {
+  const { loading, isLogged } = useAuthStore();
 
-  const isAuthenticated = false;
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color="#FF6F61" />
+      </View>
+    );
+  }
 
-  if (!isAuthenticated) return <Redirect href="/sign-in" />
+  if (!isLogged) return <Redirect href="/sign-in" />
 
   return <Slot />
 }

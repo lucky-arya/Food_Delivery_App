@@ -12,7 +12,6 @@ interface CustomInputProps {
 }
 
 const CustomInput = ({ placeholder, value, onChangeText, label, secureTextEntry = false, keyBoardType = 'default' }: CustomInputProps) => {
-    const [isEmpty, setIsEmpty] = useState<boolean>(true);
     const [isFocused, setIsFocused] = useState<boolean>(false);
 
     return (
