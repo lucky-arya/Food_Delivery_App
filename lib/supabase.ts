@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, processLock } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 import 'react-native-url-polyfill/auto';
-import { CreateUserParams, SignInParams, User } from "../type";
+import { CreateUserParams, SignInParams, User, GetMenuParams } from "../type";
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
 const supabasePublishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
@@ -117,4 +117,57 @@ export const signOut = async () => {
     }
 };
 
+export const getMenu = async (params: GetMenuParams) => {
+    try {
+        const { category, query } = params;
+        let queryBuilder = supabase.from('menu').select('*');
 
+        if (category && category.trim() !== '' && category.toLowerCase() !== 'all') {
+            // Check if category is numeric ID or category name
+            if (/^\d+$/.test(category)) {
+                queryBuilder = queryBuilder.eq('category_id', Number(category));
+            } else {
+                // Fetch category ID by name
+                const { data: catData, error: catError } = await supabase
+                    .from('categories')
+                    .select('id')
+                    .ilike('name', category.trim())
+                    .maybeSingle();
+
+                if (catError) throw catError;
+                
+                if (catData) {
+                    queryBuilder = queryBuilder.eq('category_id', catData.id);
+                } else {
+                    // Category name not found, return empty list
+                    return [];
+                }
+            }
+        }
+
+        if (query && query.trim() !== '') {
+            // Trigram index on "name" enables high performance ILIKE queries
+            queryBuilder = queryBuilder.ilike('name', `%${query.trim()}%`);
+        }
+
+        const { data, error } = await queryBuilder.order('id', { ascending: true });
+        if (error) throw error;
+        return data || [];
+    } catch (error: any) {
+        throw new Error(error.message || String(error));
+    }
+};
+
+export const getCategories = async () => {
+    try {
+        const { data, error } = await supabase
+            .from('categories')
+            .select('*')
+            .order('id', { ascending: true });
+
+        if (error) throw error;
+        return data || [];
+    } catch (error: any) {
+        throw new Error(error.message || String(error));
+    }
+};
