@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, processLock } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 import 'react-native-url-polyfill/auto';
-import { CreateUserParams, SignInParams, User, GetMenuParams } from "../type";
+import { CreateUserParams, SignInParams, User, GetMenuParams, MenuItem, CartCustomization } from "../type";
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
 const supabasePublishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
@@ -92,16 +92,11 @@ export const getCurrentUser = async (): Promise<User | null> => {
         }
 
         return {
-            $id: user.id,
-            $createdAt: user.created_at || '',
-            $updatedAt: user.updated_at || '',
-            $permissions: [],
-            $databaseId: '',
-            $collectionId: '',
+            id: user.id,
             name,
             email: user.email || '',
             avatar,
-        } as unknown as User;
+        };
     } catch (error) {
         return null;
     }
@@ -167,6 +162,64 @@ export const getCategories = async () => {
 
         if (error) throw error;
         return data || [];
+    } catch (error: any) {
+        throw new Error(error.message || String(error));
+    }
+};
+
+export const updateProfile = async (userId: string, updates: { name: string; avatar?: string }) => {
+    try {
+        const { error } = await supabase
+            .from('profiles')
+            .update(updates)
+            .eq('id', userId);
+
+        if (error) throw error;
+        
+        // Also update auth user metadata
+        const { error: authError } = await supabase.auth.updateUser({
+            data: {
+                name: updates.name,
+                ...(updates.avatar ? { avatar: updates.avatar } : {}),
+            }
+        });
+        if (authError) throw authError;
+
+        return true;
+    } catch (error: any) {
+        throw new Error(error.message || String(error));
+    }
+};
+
+export const getMenuItemById = async (id: number): Promise<MenuItem | null> => {
+    try {
+        const { data, error } = await supabase
+            .from('menu')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        return data;
+    } catch (error: any) {
+        throw new Error(error.message || String(error));
+    }
+};
+
+export const getMenuItemCustomizations = async (menuId: number): Promise<CartCustomization[]> => {
+    try {
+        const { data, error } = await supabase
+            .from('menu_customizations')
+            .select('customization_id, customizations (id, name, price, type)')
+            .eq('menu_id', menuId);
+
+        if (error) throw error;
+        
+        // Map join result to retrieve customization items
+        const results = data || [];
+        return results
+            .map((item: any) => item.customizations)
+            .filter(Boolean) as unknown as CartCustomization[];
     } catch (error: any) {
         throw new Error(error.message || String(error));
     }

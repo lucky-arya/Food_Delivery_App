@@ -5,12 +5,14 @@ function areCustomizationsEqual(
     a: CartCustomization[] = [],
     b: CartCustomization[] = []
 ): boolean {
-    if (a.length !== b.length) return false;
+    const safeA = a || [];
+    const safeB = b || [];
+    if (safeA.length !== safeB.length) return false;
 
-    const aSorted = [...a].sort((x, y) => x.id.localeCompare(y.id));
-    const bSorted = [...b].sort((x, y) => x.id.localeCompare(y.id));
+    const aSorted = [...safeA].sort((x, y) => String(x.id).localeCompare(String(y.id)));
+    const bSorted = [...safeB].sort((x, y) => String(x.id).localeCompare(String(y.id)));
 
-    return aSorted.every((item, idx) => item.id === bSorted[idx].id);
+    return aSorted.every((item, idx) => String(item.id) === String(bSorted[idx].id));
 }
 
 export const useCartStore = create<CartStore>((set, get) => ({
@@ -18,6 +20,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
     addItem: (item) => {
         const customizations = item.customizations ?? [];
+        const qty = item.quantity ?? 1;
 
         const existing = get().items.find(
             (i) =>
@@ -30,13 +33,13 @@ export const useCartStore = create<CartStore>((set, get) => ({
                 items: get().items.map((i) =>
                     i.id === item.id &&
                         areCustomizationsEqual(i.customizations ?? [], customizations)
-                        ? { ...i, quantity: i.quantity + 1 }
+                        ? { ...i, quantity: i.quantity + qty }
                         : i
                 ),
             });
         } else {
             set({
-                items: [...get().items, { ...item, quantity: 1, customizations }],
+                items: [...get().items, { ...item, quantity: qty, customizations }],
             });
         }
     },
@@ -83,13 +86,5 @@ export const useCartStore = create<CartStore>((set, get) => ({
         get().items.reduce((total, item) => total + item.quantity, 0),
 
     getTotalPrice: () =>
-        get().items.reduce((total, item) => {
-            const base = item.price;
-            const customPrice =
-                item.customizations?.reduce(
-                    (s: number, c: CartCustomization) => s + c.price,
-                    0
-                ) ?? 0;
-            return total + item.quantity * (base + customPrice);
-        }, 0),
+        get().items.reduce((total, item) => total + item.quantity * item.price, 0),
 }));

@@ -1,6 +1,6 @@
-import { Models } from "react-native-appwrite";
 
-export interface MenuItem extends Models.Document {
+export interface MenuItem {
+    id: number;
     name: string;
     price: number;
     image_url: string;
@@ -8,15 +8,17 @@ export interface MenuItem extends Models.Document {
     calories: number;
     protein: number;
     rating: number;
-    type: string;
+    category_id: number;
 }
 
-export interface Category extends Models.Document {
+export interface Category {
+    id: number;
     name: string;
     description: string;
 }
 
-export interface User extends Models.Document {
+export interface User {
+    id: string;
     name: string;
     email: string;
     avatar: string;
@@ -39,8 +41,8 @@ export interface CartItemType {
 }
 
 export interface CartStore {
-    items: CartItem[];
-    addItem: (item: Omit<CartItem, "quantity">) => void;
+    items: CartItemType[];
+    addItem: (item: Omit<CartItemType, "quantity"> & { quantity?: number }) => void;
     removeItem: (id: string, customizations: CartCustomization[]) => void;
     increaseQty: (id: string, customizations: CartCustomization[]) => void;
     decreaseQty: (id: string, customizations: CartCustomization[]) => void;

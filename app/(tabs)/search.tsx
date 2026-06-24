@@ -1,7 +1,7 @@
 import CartButton from "@/components/CartButton";
 import MenuCard from "@/components/MenuCard";
 import { getCategories, getMenu } from "@/lib/supabase";
-import useAppwrite from "@/lib/useAppwrite";
+import useSupabase from "@/lib/useSupabase";
 import { MenuItem } from "@/type";
 import cn from "clsx";
 import { useLocalSearchParams } from "expo-router";
@@ -15,8 +15,8 @@ import SearchBar from "@/components/SearchBar";
 const Search = () => {
   const { category, query } = useLocalSearchParams<{ query: string; category: string }>()
 
-  const { data, refetch, loading } = useAppwrite({ fn: getMenu, params: { category, query, limit: 6, } });
-  const { data: categories } = useAppwrite({ fn: getCategories });
+  const { data, refetch, loading } = useSupabase({ fn: getMenu, params: { category, query, limit: 6, } });
+  const { data: categories } = useSupabase({ fn: getCategories });
 
   useEffect(() => {
     refetch({ category, query, limit: 6 })
@@ -35,7 +35,7 @@ const Search = () => {
             </View>
           )
         }}
-        keyExtractor={item => item.$id}
+        keyExtractor={item => item.id.toString()}
         numColumns={2}
         columnWrapperClassName="gap-7"
         contentContainerClassName="gap-7 px-5 pb-32"
